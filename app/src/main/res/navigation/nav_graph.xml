@@ -17,7 +17,7 @@
 
     <fragment
         android:id="@+id/virtual_control_fragment_nav"
-        android:name="io.mavsdk.androidclient.manul.VirtualControlFragment"
+        android:name="io.mavsdk.androidclient.preflight_check.manual.VirtualControlFragment"
         android:label="Manual Control"
         tools:layout="@layout/virual_control_fg">
         <action
@@ -25,6 +25,31 @@
             app:destination="@id/maps_fragment_nav"
             app:launchSingleTop="true"
             app:popUpTo="@id/virtual_control_fragment_nav"
-            app:popUpToInclusive="true"/>
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_virtual_control_fragment_nav_to_gallery_fg_nav"
+            app:destination="@id/gallery_fg_nav"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/virtual_control_fragment_nav"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/gallery_fg_nav"
+        android:name="io.mavsdk.androidclient.photo_gallery.GalleryFragment"
+        android:label="Gallery Fragment"
+        tools:layout="@layout/gallery_fg">
+        <action
+            android:id="@+id/action_gallery_fg_nav_to_maps_fragment_nav"
+            app:destination="@id/maps_fragment_nav"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/gallery_fg_nav"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_gallery_fg_nav_to_virtual_control_fragment_nav"
+            app:destination="@id/virtual_control_fragment_nav"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/gallery_fg_nav"
+            app:popUpToInclusive="true" />
     </fragment>
 </navigation>

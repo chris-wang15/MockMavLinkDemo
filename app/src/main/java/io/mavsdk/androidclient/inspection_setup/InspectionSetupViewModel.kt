@@ -12,7 +12,6 @@ import io.mavsdk.androidclient.abstract_drone_layer.Drone
 import io.mavsdk.androidclient.abstract_drone_layer.DroneServer
 import io.mavsdk.androidclient.mavlink.MavLinkServer
 import io.mavsdk.androidclient.mock_drone.MockDroneServer
-import java.util.Arrays
 
 class InspectionSetupViewModel : ViewModel() {
     companion object {

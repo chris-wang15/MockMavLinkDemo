@@ -14,11 +14,10 @@ class MapsViewModel : ViewModel() {
     private val _currentMissionPlanLiveData: MutableLiveData<MutableList<LatLng>> = MutableLiveData(
         ArrayList()
     )
-    val currentMissionPlanLiveData = _currentMissionPlanLiveData
-//    val currentMissionPlanLiveData: LiveData<List<LatLng>> = _currentMissionPlanLiveData.map {
-//        val list: List<LatLng> = it
-//        list
-//    }
+    val currentMissionPlanLiveData: LiveData<List<LatLng>> = _currentMissionPlanLiveData.map {
+        val list: List<LatLng> = it
+        list
+    }
 
     override fun onCleared() {
         super.onCleared()

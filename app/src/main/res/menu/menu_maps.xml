@@ -6,4 +6,6 @@
         android:title="map" />
     <item android:id="@+id/to_manual_control"
         android:title="manual"/>
+    <item android:id="@+id/to_gallery"
+        android:title="gallery"/>
 </menu>

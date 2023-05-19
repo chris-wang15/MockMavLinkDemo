@@ -1,4 +1,4 @@
-package io.mavsdk.androidclient.manul
+package io.mavsdk.androidclient.preflight_check.manual
 
 import android.content.Context
 import android.graphics.*

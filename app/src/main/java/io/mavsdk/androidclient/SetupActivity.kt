@@ -19,13 +19,13 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.mapbox.mapboxsdk.plugins.annotation.*
-import com.tools.timezone.util.RxBus
 import io.mavsdk.androidclient.abstract_drone_layer.Mission
 import io.mavsdk.androidclient.inspection_setup.InspectionSetupViewModel
+import io.mavsdk.androidclient.util.RxBus
 import io.reactivex.disposables.Disposable
 
 @SuppressLint("SetTextI18n")
-class MapsActivity : AppCompatActivity() {
+class SetupActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MapsActivity"
     }
@@ -56,7 +56,7 @@ class MapsActivity : AppCompatActivity() {
         rxBusDisposable?.dispose()
         rxBusDisposable = RxBus.addToObserve(Event::class.java).subscribe { event ->
             when (event) {
-                is Event.GetDrone -> event.onDroneInfo(viewModel.droneState.value)
+                is Event.StopDrone -> viewModel.stopServer()
             }
         }
     }
@@ -73,6 +73,7 @@ class MapsActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val controller = findNavController(R.id.nav_host_fragment_content_main)
         when (item.itemId) {
             R.id.to_inspection_screen -> viewModel.showInspectionScreen()
             R.id.to_map_fragment -> {
@@ -80,10 +81,13 @@ class MapsActivity : AppCompatActivity() {
                     Toast.makeText(this, "no drone detected", Toast.LENGTH_SHORT).show()
                 } else {
                     viewModel.hidInspectionScreen()
-                    val controller = findNavController(R.id.nav_host_fragment_content_main)
-                    if (controller.currentDestination?.id != R.id.maps_fragment_nav) {
+                    if (controller.currentDestination?.id == R.id.virtual_control_fragment_nav) {
                         controller.navigate(
                             R.id.action_virtual_control_fragment_nav_to_maps_fragment_nav
+                        )
+                    } else if (controller.currentDestination?.id == R.id.gallery_fg_nav) {
+                        controller.navigate(
+                            R.id.action_gallery_fg_nav_to_maps_fragment_nav
                         )
                     }
                 }
@@ -93,10 +97,27 @@ class MapsActivity : AppCompatActivity() {
                     Toast.makeText(this, "no drone detected", Toast.LENGTH_SHORT).show()
                 } else {
                     viewModel.hidInspectionScreen()
-                    val controller = findNavController(R.id.nav_host_fragment_content_main)
-                    if (controller.currentDestination?.id != R.id.virtual_control_fragment_nav) {
+                    if (controller.currentDestination?.id == R.id.maps_fragment_nav) {
                         controller.navigate(
                             R.id.action_maps_fragment_to_virtual_control_fragment
+                        )
+                    } else if (controller.currentDestination?.id == R.id.gallery_fg_nav) {
+                        controller.navigate(
+                            R.id.action_gallery_fg_nav_to_virtual_control_fragment_nav
+                        )
+                    }
+                }
+            }
+            R.id.to_gallery -> {
+                if (viewModel.droneState.value == null) {
+                    Toast.makeText(this, "no drone detected", Toast.LENGTH_SHORT).show()
+                } else {
+                    viewModel.hidInspectionScreen()
+                    if (controller.currentDestination?.id == R.id.maps_fragment_nav) {
+                        controller.navigate(R.id.gallery_fg_nav)
+                    } else if (controller.currentDestination?.id == R.id.virtual_control_fragment_nav) {
+                        controller.navigate(
+                            R.id.action_virtual_control_fragment_nav_to_gallery_fg_nav
                         )
                     }
                 }

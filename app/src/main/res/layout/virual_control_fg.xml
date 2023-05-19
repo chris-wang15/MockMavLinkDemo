@@ -23,7 +23,7 @@
             android:text="Drone Video Stream" />
     </FrameLayout>
 
-    <io.mavsdk.androidclient.manul.OnScreenJoystick
+    <io.mavsdk.androidclient.preflight_check.manual.OnScreenJoystick
         android:id="@+id/directionJoystickLeft"
         android:layout_width="130dp"
         android:layout_height="130dp"
@@ -32,7 +32,7 @@
         android:layout_marginBottom="70dp"
         android:background="@mipmap/joystick_bg" />
 
-    <io.mavsdk.androidclient.manul.OnScreenJoystick
+    <io.mavsdk.androidclient.preflight_check.manual.OnScreenJoystick
         android:id="@+id/directionJoystickRight"
         android:layout_width="130dp"
         android:layout_height="130dp"

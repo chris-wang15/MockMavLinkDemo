@@ -1,4 +1,4 @@
-package io.mavsdk.androidclient.manul
+package io.mavsdk.androidclient.preflight_check.manual
 
 import android.os.Bundle
 import android.util.Log
@@ -6,18 +6,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.tools.timezone.util.RxBus
-import io.mavsdk.androidclient.Event
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.LiveData
 import io.mavsdk.androidclient.R
 import io.mavsdk.androidclient.abstract_drone_layer.Drone
+import io.mavsdk.androidclient.inspection_setup.InspectionSetupViewModel
 import kotlin.math.abs
 
 class VirtualControlFragment : Fragment() {
-    private var drone: Drone? = null
+    private val locationViewModel: InspectionSetupViewModel by activityViewModels()
+    private lateinit var drone: LiveData<Drone?>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        RxBus.post(Event.GetDrone { drone = it })
+        drone = locationViewModel.droneState
     }
 
     override fun onCreateView(
