@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/maps_fragment_nav">
+
+    <fragment
+        android:id="@+id/maps_fragment_nav"
+        android:name="io.mavsdk.androidclient.map.MapsFragment"
+        android:label="Maps Fragment"
+        tools:layout="@layout/maps_fg">
+        <action
+            android:id="@+id/action_maps_fragment_to_virtual_control_fragment"
+            app:destination="@id/virtual_control_fragment_nav" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/virtual_control_fragment_nav"
+        android:name="io.mavsdk.androidclient.manul.VirtualControlFragment"
+        android:label="Manual Control"
+        tools:layout="@layout/virual_control_fg">
+        <action
+            android:id="@+id/action_virtual_control_fragment_nav_to_maps_fragment_nav"
+            app:destination="@id/maps_fragment_nav"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/virtual_control_fragment_nav"
+            app:popUpToInclusive="true"/>
+    </fragment>
+</navigation>

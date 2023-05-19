@@ -18,7 +18,7 @@ class MavLinkDrone : Drone {
         mavsdkServer: MavsdkServer,
         ipAddress: String,
         onComplete: (drone: Drone) -> Unit,
-        onLocationDetermined: (location: LatLng) -> Unit
+        onLocationUpdate: (location: LatLng) -> Unit
     ) {
         MavsdkEventQueue.executor().execute {
             Log.d(TAG, "startMavsdkServer")
@@ -37,7 +37,7 @@ class MavLinkDrone : Drone {
             disposables.add(drone!!.telemetry.position.subscribe { position: Telemetry.Position ->
                 val latLng = LatLng(position.latitudeDeg, position.longitudeDeg)
                 // viewModel.currentPositionLiveData.postValue(latLng)
-                onLocationDetermined(latLng)
+                onLocationUpdate(latLng)
             })
             onComplete(this)
         }
@@ -60,6 +60,8 @@ class MavLinkDrone : Drone {
             onComplete()
         }
     }
+
+    override fun getName() = "MavLinkDrone"
 
     override fun run(mission: Mission, onFinished: () -> Unit) {
         drone?.let { drone ->

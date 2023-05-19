@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/to_inspection_screen"
+        android:title="inspection" />
+    <item android:id="@+id/to_map_fragment"
+        android:title="map" />
+    <item android:id="@+id/to_manual_control"
+        android:title="manual"/>
+</menu>

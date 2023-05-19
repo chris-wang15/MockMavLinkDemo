@@ -1,213 +1,183 @@
 package io.mavsdk.androidclient
 
 import android.annotation.SuppressLint
-import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
+import android.widget.RadioButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
-import com.mapbox.mapboxsdk.geometry.LatLng
-import com.mapbox.mapboxsdk.maps.MapView
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
-import com.mapbox.mapboxsdk.maps.Style
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
 import com.mapbox.mapboxsdk.plugins.annotation.*
-import com.mapbox.mapboxsdk.utils.ColorUtils
-import io.mavsdk.androidclient.abstract_drone_layer.Drone
-import io.mavsdk.androidclient.abstract_drone_layer.DroneServer
-import io.mavsdk.androidclient.manul.VirtualControlFragment
-import io.mavsdk.androidclient.mavlink.MavLinkServer
+import com.tools.timezone.util.RxBus
+import io.mavsdk.androidclient.abstract_drone_layer.Mission
+import io.mavsdk.androidclient.inspection_setup.InspectionSetupViewModel
+import io.reactivex.disposables.Disposable
 
 @SuppressLint("SetTextI18n")
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MapsActivity"
     }
 
-    private val viewModel : MapsViewModel by viewModels()
-    private var isMavsdkServerRunning = false
-    private lateinit var runStopServerButton: Button
-    private var circleManager: CircleManager? = null
-    private var symbolManager: SymbolManager? = null
+    private lateinit var appBarConfiguration: AppBarConfiguration
 
-    private lateinit var mapView: MapView
-    private var map: MapboxMap? = null
+    private val viewModel: InspectionSetupViewModel by viewModels()
 
-    private val server: DroneServer = MavLinkServer()
-    private var drone: Drone? = null
-
-    private var currentPositionMarker: Symbol? = null
-    private val waypoints: MutableList<Circle> = ArrayList()
-    private val currentPositionObserver =
-        Observer { newLatLng: LatLng ->
-            updateVehiclePosition(
-                newLatLng
-            )
-        }
-    private val currentMissionPlanObserver =
-        Observer { latLngList: List<LatLng> ->
-            updateMarkers(
-                latLngList
-            )
-        }
+    private var rxBusDisposable: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Mapbox.getInstance(this, getString(R.string.access_token))
+        // Mapbox.getInstance(this, getString(R.string.access_token))
 
         setContentView(R.layout.activity_maps)
-        runStopServerButton = findViewById(R.id.buttonRunDestroyMavsdkServer)
-        runStopServerButton.setOnClickListener {
-            val fragment = VirtualControlFragment()
-            supportFragmentManager.beginTransaction()
-                .add(R.id.container, fragment, null)
-                .addToBackStack("VirtualControlFragment")
-                .commit()
-            if (drone == null) {
-                Toast.makeText(this, "No Drone Detected", Toast.LENGTH_SHORT).show()
-            }
-            fragment.setDrone(drone)
 
-//            if (isMavsdkServerRunning) {
-//                server.stopServer {
-//                    runOnUiThread {
-//                        drone = null
-//                        isMavsdkServerRunning = false
-//                        symbolManager?.delete(currentPositionMarker)
-//                        currentPositionMarker = null
-//                        runStopServerButton.text = "Run Server"
-//                    }
-//                }
-//            } else {
-//                server.startServer(
-//                    { _drone ->
-//                        runOnUiThread {
-//                            drone = _drone
-//                            isMavsdkServerRunning = true
-//                            runStopServerButton.text = "End Server"
-//                        }
-//                    },
-//                    { latLng ->
-//                        viewModel.currentPositionLiveData.postValue(latLng)
-//                    }
-//                )
-//            }
-        }
-        mapView = findViewById<MapView>(R.id.mapView).apply {
-            onCreate(savedInstanceState)
-            getMapAsync(this@MapsActivity)
-        }
-    }
+        val navHostFragment = supportFragmentManager.findFragmentById(
+            R.id.nav_host_fragment_content_main
+        ) as NavHostFragment
+        val navController = navHostFragment.navController
 
-    // Update [currentPositionMarker] position with a new [position].
-    private fun updateVehiclePosition(newLatLng: LatLng?) {
-        if (newLatLng == null || map == null || symbolManager == null) {
-            // Not ready
-            return
-        }
+        appBarConfiguration = AppBarConfiguration(navController.graph)
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
-        // Add a vehicle marker and move the camera
-        if (currentPositionMarker == null) {
-            val symbolOptions = SymbolOptions()
-            symbolOptions.withLatLng(newLatLng)
-            symbolOptions.withIconImage("marker-icon-id")
-            currentPositionMarker = symbolManager!!.create(symbolOptions)
-            map!!.moveCamera(CameraUpdateFactory.tiltTo(0.0))
-            map!!.moveCamera(CameraUpdateFactory.newLatLngZoom(newLatLng, 14.0))
-        } else {
-            currentPositionMarker?.setLatLng(newLatLng)
-            symbolManager?.update(currentPositionMarker)
-        }
-    }
+        initInspectionScreen()
 
-    // Update the [map] with the current mission plan waypoints.
-    private fun updateMarkers(latLngList: List<LatLng>) {
-        circleManager?.let {
-            it.delete(waypoints)
-            waypoints.clear()
-            for (latLng in latLngList) {
-                val circleOptions = CircleOptions()
-                    .withLatLng(latLng)
-                    .withCircleColor(ColorUtils.colorToRgbaString(Color.BLUE))
-                    .withCircleStrokeColor(ColorUtils.colorToRgbaString(Color.BLACK))
-                    .withCircleStrokeWidth(1.0f)
-                    .withCircleRadius(12f)
-                    .withDraggable(false)
-                it.create(circleOptions)
+        rxBusDisposable?.dispose()
+        rxBusDisposable = RxBus.addToObserve(Event::class.java).subscribe { event ->
+            when (event) {
+                is Event.GetDrone -> event.onDroneInfo(viewModel.droneState.value)
             }
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        mapView.onStart()
+    override fun onSupportNavigateUp(): Boolean {
+        val navController = findNavController(R.id.nav_host_fragment_content_main)
+        return navController.navigateUp(appBarConfiguration)
+                || super.onSupportNavigateUp()
     }
 
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
-        viewModel.currentPositionLiveData.observe(this, currentPositionObserver)
-        viewModel.currentMissionPlanLiveData.observe(this, currentMissionPlanObserver)
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_maps, menu)
+        return true
     }
 
-    override fun onPause() {
-        super.onPause()
-        mapView.onPause()
-        viewModel.currentPositionLiveData.removeObserver(currentPositionObserver)
-        viewModel.currentMissionPlanLiveData.removeObserver(currentMissionPlanObserver)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mapView.onStop()
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapView.onLowMemory()
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.to_inspection_screen -> viewModel.showInspectionScreen()
+            R.id.to_map_fragment -> {
+                if (viewModel.droneState.value == null) {
+                    Toast.makeText(this, "no drone detected", Toast.LENGTH_SHORT).show()
+                } else {
+                    viewModel.hidInspectionScreen()
+                    val controller = findNavController(R.id.nav_host_fragment_content_main)
+                    if (controller.currentDestination?.id != R.id.maps_fragment_nav) {
+                        controller.navigate(
+                            R.id.action_virtual_control_fragment_nav_to_maps_fragment_nav
+                        )
+                    }
+                }
+            }
+            R.id.to_manual_control -> {
+                if (viewModel.droneState.value == null) {
+                    Toast.makeText(this, "no drone detected", Toast.LENGTH_SHORT).show()
+                } else {
+                    viewModel.hidInspectionScreen()
+                    val controller = findNavController(R.id.nav_host_fragment_content_main)
+                    if (controller.currentDestination?.id != R.id.virtual_control_fragment_nav) {
+                        controller.navigate(
+                            R.id.action_maps_fragment_to_virtual_control_fragment
+                        )
+                    }
+                }
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
+        return true
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mapView.onDestroy()
+        rxBusDisposable?.dispose()
+        rxBusDisposable = null
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        mapView.onSaveInstanceState(outState)
-    }
+    private fun initInspectionScreen() {
+        val androidInfoText = findViewById<TextView>(R.id.android_info_des)
+        androidInfoText.text = viewModel.getAndroidDeviceInfo()
 
-
-    override fun onMapReady(mapboxMap: MapboxMap) {
-        Log.d("Drone", "onMapReady")
-        mapboxMap.uiSettings.isRotateGesturesEnabled = false
-        mapboxMap.uiSettings.isTiltGesturesEnabled = false
-        mapboxMap.addOnMapLongClickListener { point: LatLng ->
-            viewModel.addWaypoint(point)
-            true
+        val mavRadioButton = findViewById<RadioButton>(R.id.radio_mav)
+        val mockButton = findViewById<RadioButton>(R.id.radio_test)
+        viewModel.server.observe(this) { server ->
+            if (server.getName() == "MockDroneServer") {
+                mockButton.isChecked = true
+                mavRadioButton.isChecked = false
+            } else {
+                mockButton.isChecked = false
+                mavRadioButton.isChecked = true
+            }
+        }
+        mavRadioButton.setOnClickListener {
+            viewModel.selectServerMode(it.context, false)
+        }
+        mockButton.setOnClickListener {
+            viewModel.selectServerMode(it.context, true)
         }
 
-        mapboxMap.setStyle(Style.LIGHT) { style: Style ->
-            // Add the marker image to map
-            style.addImage(
-                "marker-icon-id",
-                BitmapFactory.decodeResource(
-                    this@MapsActivity.resources,
-                    com.mapbox.mapboxsdk.R.drawable.mapbox_marker_icon_default
-                )
-            )
-            symbolManager = SymbolManager(mapView, map!!, style)
-            symbolManager?.iconAllowOverlap = true
-            circleManager = CircleManager(mapView, map!!, style)
+        val detectedDevice = findViewById<TextView>(R.id.detect_drone_info)
+        viewModel.detectedDevice.observe(this) {
+            detectedDevice.text = it
         }
 
-        map = mapboxMap
+        findViewById<Button>(R.id.takeoff_button).let {
+            it.setOnClickListener {
+                viewModel.droneState.value?.run(Mission.TakeOff) {
+                    Log.d(TAG, "takeOff pressed")
+                }
+            }
+        }
+
+        findViewById<Button>(R.id.land_button).let {
+            it.setOnClickListener {
+                viewModel.droneState.value?.run(Mission.Land) {
+                    Log.d(TAG, "land pressed")
+                }
+            }
+        }
+
+        findViewById<Button>(R.id.video_button).let {
+            it.setOnClickListener {
+                viewModel.droneState.value?.run(Mission.StartVideo) {
+                    Log.d(TAG, "start video stream pressed")
+                }
+            }
+        }
+
+        findViewById<Button>(R.id.run_server_button).let {
+            it.setOnClickListener {
+                viewModel.startServer()
+            }
+        }
+
+        findViewById<Button>(R.id.stop_server_button).let {
+            it.setOnClickListener {
+                viewModel.stopServer()
+            }
+        }
+
+        val inspectionScreen = findViewById<ViewGroup>(R.id.inspection_setup_container)
+        viewModel.visibleState.observe(this) { visible ->
+            inspectionScreen.visibility = if (visible) View.VISIBLE else View.GONE
+        }
     }
 }

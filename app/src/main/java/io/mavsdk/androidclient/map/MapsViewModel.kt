@@ -1,20 +1,24 @@
-package io.mavsdk.androidclient
+package io.mavsdk.androidclient.map
 
 import android.annotation.SuppressLint
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.map
 import com.mapbox.mapboxsdk.geometry.LatLng
 import io.mavsdk.androidclient.abstract_drone_layer.Drone
 import io.mavsdk.androidclient.abstract_drone_layer.Mission
 
 class MapsViewModel : ViewModel() {
-    val currentPositionLiveData: MutableLiveData<LatLng> = MutableLiveData(
-        LatLng(45.71701, 126.64256)
-    )
-    val currentMissionPlanLiveData: MutableLiveData<MutableList<LatLng>> = MutableLiveData(
+    private val _currentMissionPlanLiveData: MutableLiveData<MutableList<LatLng>> = MutableLiveData(
         ArrayList()
     )
+    val currentMissionPlanLiveData = _currentMissionPlanLiveData
+//    val currentMissionPlanLiveData: LiveData<List<LatLng>> = _currentMissionPlanLiveData.map {
+//        val list: List<LatLng> = it
+//        list
+//    }
 
     override fun onCleared() {
         super.onCleared()
@@ -25,14 +29,17 @@ class MapsViewModel : ViewModel() {
      */
     @SuppressLint("CheckResult")
     fun startMission(drone: Drone) {
-        val plan = currentMissionPlanLiveData.value ?: return
+        val plan = _currentMissionPlanLiveData.value ?: return
         val latLngs: List<LatLng> = ArrayList(plan)
         val missionPlan = Mission.MissionPlan(
             latLngs = latLngs,
             height = MISSION_HEIGHT,
             speed = MISSION_SPEED,
         )
-        drone.run(missionPlan) { Log.d(TAG, "mission plan finished") }
+        drone.run(missionPlan) {
+            Log.d(TAG, "mission plan finished")
+            _currentMissionPlanLiveData.postValue(ArrayList())
+        }
     }
 
     /**
@@ -41,9 +48,9 @@ class MapsViewModel : ViewModel() {
      * @param latLng waypoint to add
      */
     fun addWaypoint(latLng: LatLng) {
-        val currentMissionItems = currentMissionPlanLiveData.value!!
+        val currentMissionItems = _currentMissionPlanLiveData.value!!
         currentMissionItems.add(latLng)
-        currentMissionPlanLiveData.postValue(currentMissionItems)
+        _currentMissionPlanLiveData.postValue(currentMissionItems)
     }
 
     companion object {

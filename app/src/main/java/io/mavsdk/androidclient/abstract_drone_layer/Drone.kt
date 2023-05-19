@@ -3,6 +3,7 @@ package io.mavsdk.androidclient.abstract_drone_layer
 import com.mapbox.mapboxsdk.geometry.LatLng
 
 interface Drone {
+    fun getName(): String
     fun run(mission: Mission, onFinished: () -> Unit)
 }
 
