@@ -20,7 +20,7 @@ class OnScreenJoystick(context: Context, attributeSet: AttributeSet): SurfaceVie
     private lateinit var mJoystick: Bitmap
     private lateinit var mHolder: SurfaceHolder
     private var mKnobBounds: Rect? = null
-    private lateinit var mThread: JoystickThread
+    private var mThread: JoystickThread? = null
 
     private var mKnobX by Delegates.notNull<Int>()
     private var mKnobY by Delegates.notNull<Int>()
@@ -40,8 +40,6 @@ class OnScreenJoystick(context: Context, attributeSet: AttributeSet): SurfaceVie
         mHolder = holder
         mHolder.addCallback(this)
 
-        mThread = JoystickThread()
-
         setZOrderOnTop(true)
         mHolder.setFormat(PixelFormat.TRANSPARENT)
         setOnTouchListener(this)
@@ -54,6 +52,12 @@ class OnScreenJoystick(context: Context, attributeSet: AttributeSet): SurfaceVie
         mJoystick = BitmapFactory.decodeResource(
             res, R.mipmap.joystick
         )
+    }
+
+    @Volatile
+    private var visibleState : Boolean = false
+    fun onVisibilityChanged(visibleState : Boolean) {
+        this.visibleState = visibleState
     }
 
     private fun initBounds(pCanvas: Canvas) {
@@ -77,14 +81,22 @@ class OnScreenJoystick(context: Context, attributeSet: AttributeSet): SurfaceVie
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        mThread.start()
+        if (mThread != null) {
+            Log.e(TAG, "surface not destroyed")
+            try {
+                mThread?.interrupt()
+            } catch (e: InterruptedException) {}
+        }
+        mThread = JoystickThread() // TODO Rxjava thread pool
+        mThread?.start()
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         try {
-            mThread.interrupt()
+            mThread?.interrupt()
+            mThread = null
         } catch (e: InterruptedException) {}
     }
 
@@ -139,6 +151,9 @@ class OnScreenJoystick(context: Context, attributeSet: AttributeSet): SurfaceVie
 
         override fun run() {
             while(!isInterrupted) {
+                if (!visibleState) {
+                    continue
+                }
                 synchronized(mHolder) {
                     var canvas: Canvas? = null
                     try {

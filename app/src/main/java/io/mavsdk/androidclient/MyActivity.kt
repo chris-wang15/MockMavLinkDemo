@@ -120,6 +120,11 @@ class MyActivity : AppCompatActivity() {
         rxBusDisposable = null
     }
 
+    override fun onPause() {
+        super.onPause()
+        manualScreenViewModel.hideScreen()
+    }
+
     private fun initVirtualControlScreen() {
         val mScreenJoystickRight: OnScreenJoystick = findViewById(R.id.directionJoystickRight)
         val mScreenJoystickLeft: OnScreenJoystick = findViewById(R.id.directionJoystickLeft)
@@ -142,6 +147,8 @@ class MyActivity : AppCompatActivity() {
         val screen = findViewById<View>(R.id.virtual_control_container)
         manualScreenViewModel.visibleState.observe(this) { visible ->
             screen.visibility = if (visible) View.VISIBLE else View.GONE
+            mScreenJoystickRight.onVisibilityChanged(visible)
+            mScreenJoystickLeft.onVisibilityChanged(visible)
         }
     }
 }
