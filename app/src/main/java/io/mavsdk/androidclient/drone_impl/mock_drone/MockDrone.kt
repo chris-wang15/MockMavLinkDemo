@@ -1,4 +1,4 @@
-package io.mavsdk.androidclient.mock_drone
+package io.mavsdk.androidclient.drone_impl.mock_drone
 
 import android.util.Log
 import com.mapbox.mapboxsdk.geometry.LatLng

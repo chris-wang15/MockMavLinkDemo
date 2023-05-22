@@ -3,34 +3,31 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/maps_fragment_nav">
+    app:startDestination="@id/inspection_setup_fragment_nav">
 
     <fragment
         android:id="@+id/maps_fragment_nav"
         android:name="io.mavsdk.androidclient.map.MapsFragment"
         android:label="Maps Fragment"
         tools:layout="@layout/maps_fg">
-        <action
-            android:id="@+id/action_maps_fragment_to_virtual_control_fragment"
-            app:destination="@id/virtual_control_fragment_nav" />
     </fragment>
 
     <fragment
-        android:id="@+id/virtual_control_fragment_nav"
-        android:name="io.mavsdk.androidclient.preflight_check.manual.VirtualControlFragment"
+        android:id="@+id/inspection_setup_fragment_nav"
+        android:name="io.mavsdk.androidclient.inspection_setup.InspectionFragment"
         android:label="Manual Control"
-        tools:layout="@layout/virual_control_fg">
+        tools:layout="@layout/inspection_fg">
         <action
             android:id="@+id/action_virtual_control_fragment_nav_to_maps_fragment_nav"
             app:destination="@id/maps_fragment_nav"
             app:launchSingleTop="true"
-            app:popUpTo="@id/virtual_control_fragment_nav"
+            app:popUpTo="@id/inspection_setup_fragment_nav"
             app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_virtual_control_fragment_nav_to_gallery_fg_nav"
             app:destination="@id/gallery_fg_nav"
             app:launchSingleTop="true"
-            app:popUpTo="@id/virtual_control_fragment_nav"
+            app:popUpTo="@id/inspection_setup_fragment_nav"
             app:popUpToInclusive="true" />
     </fragment>
 
@@ -39,17 +36,5 @@
         android:name="io.mavsdk.androidclient.photo_gallery.GalleryFragment"
         android:label="Gallery Fragment"
         tools:layout="@layout/gallery_fg">
-        <action
-            android:id="@+id/action_gallery_fg_nav_to_maps_fragment_nav"
-            app:destination="@id/maps_fragment_nav"
-            app:launchSingleTop="true"
-            app:popUpTo="@id/gallery_fg_nav"
-            app:popUpToInclusive="true" />
-        <action
-            android:id="@+id/action_gallery_fg_nav_to_virtual_control_fragment_nav"
-            app:destination="@id/virtual_control_fragment_nav"
-            app:launchSingleTop="true"
-            app:popUpTo="@id/gallery_fg_nav"
-            app:popUpToInclusive="true" />
     </fragment>
 </navigation>

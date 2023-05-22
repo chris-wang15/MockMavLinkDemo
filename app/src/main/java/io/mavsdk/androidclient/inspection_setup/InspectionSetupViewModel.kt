@@ -10,8 +10,8 @@ import androidx.lifecycle.ViewModel
 import com.mapbox.mapboxsdk.geometry.LatLng
 import io.mavsdk.androidclient.abstract_drone_layer.Drone
 import io.mavsdk.androidclient.abstract_drone_layer.DroneServer
-import io.mavsdk.androidclient.mavlink.MavLinkServer
-import io.mavsdk.androidclient.mock_drone.MockDroneServer
+import io.mavsdk.androidclient.drone_impl.mavlink.MavLinkServer
+import io.mavsdk.androidclient.drone_impl.mock_drone.MockDroneServer
 
 class InspectionSetupViewModel : ViewModel() {
     companion object {
@@ -32,8 +32,6 @@ class InspectionSetupViewModel : ViewModel() {
         LatLng(45.71701, 126.64256)
     )
     val deviceLocation: LiveData<LatLng> = _deviceLocation
-    private val _visibleState: MutableLiveData<Boolean> = MutableLiveData(true)
-    val visibleState: LiveData<Boolean> = _visibleState
 
     fun startServer() {
         if (_isServerRunning.value != true) {
@@ -77,13 +75,5 @@ class InspectionSetupViewModel : ViewModel() {
             return
         }
         _server.value = if (mock) mockServer else mavLinkServer
-    }
-
-    fun showInspectionScreen() {
-        _visibleState.value = true
-    }
-
-    fun hidInspectionScreen() {
-        _visibleState.value = false
     }
 }

@@ -83,14 +83,9 @@ class OnScreenJoystick(context: Context, attributeSet: AttributeSet): SurfaceVie
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        var retry = true
-
-        while (retry) {
-            try {
-                mThread.interrupt()
-                retry = false
-            } catch (e: InterruptedException) {}
-        }
+        try {
+            mThread.interrupt()
+        } catch (e: InterruptedException) {}
     }
 
     private fun doDraw(canvas: Canvas) {

@@ -50,6 +50,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
             updateMarkers(latLngList)
         }
 
+    private var needLazyInitPosition = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Mapbox.getInstance(requireContext(), getString(R.string.access_token))
@@ -88,8 +90,11 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     private fun updateVehiclePosition(newLatLng: LatLng?) {
         if (newLatLng == null || map == null || symbolManager == null) {
             // Not ready
+            needLazyInitPosition = true
             return
         }
+        needLazyInitPosition = false
+        Log.d(TAG, "updateVehiclePosition $newLatLng")
 
         // Add a vehicle marker and move the camera
         if (currentPositionMarker == null) {
@@ -187,6 +192,12 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
             symbolManager = SymbolManager(mapView, map!!, style)
             symbolManager?.iconAllowOverlap = true
             circleManager = CircleManager(mapView, map!!, style)
+
+            if (needLazyInitPosition) {
+                locationViewModel.deviceLocation.value?.let {
+                    updateVehiclePosition(it)
+                }
+            }
         }
 
         map = mapboxMap

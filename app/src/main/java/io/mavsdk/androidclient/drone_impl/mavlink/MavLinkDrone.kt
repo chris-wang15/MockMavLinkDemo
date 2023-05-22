@@ -1,4 +1,4 @@
-package io.mavsdk.androidclient.mavlink
+package io.mavsdk.androidclient.drone_impl.mavlink
 
 import android.util.Log
 import com.mapbox.mapboxsdk.geometry.LatLng
